@@ -14,32 +14,55 @@ import {
 } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { FaEye, FaEyeSlash, FaGoogle, FaGithub, FaBolt, FaCheck } from "react-icons/fa";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 import { HiSparkles } from "react-icons/hi";
+
+const registerSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  username: z.string().min(3, "Username must be at least 3 characters"),
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(4, "Password must be at least 4 characters"),
+});
+
+type RegisterFormData = z.infer<typeof registerSchema>;
 
 export default function SignupPage() {
   const [showPassword, setShowPassword] = React.useState(false);
-  const [isLoading, setIsLoading] = React.useState(false);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+  });
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const onSubmit = async (data: {
+    name: string;
+    username: string;
+    email: string;
+    password: string;
+  }) => {
+    console.log("Form payload:", data);
     // Simulate API sign up
     await new Promise((resolve) => setTimeout(resolve, 1500));
-    setIsLoading(false);
+    toast.success("Account created successfully!");
   };
 
   return (
     <div className="flex min-h-screen w-full flex-col md:flex-row bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 font-sans selection:bg-teal-500/30 selection:text-teal-900 dark:selection:text-teal-200 transition-colors duration-200">
-      
+
       {/* Left Pane: Aesthetic Branding Area */}
       <div className="relative hidden md:flex md:w-1/2 flex-col justify-between p-12 overflow-hidden border-r border-zinc-200/50 dark:border-zinc-800/40 bg-zinc-900 dark:bg-zinc-950">
-        
+
         {/* Glows */}
         <div className="absolute top-[-10%] right-[-10%] h-[500px] w-[500px] rounded-full bg-teal-500/10 blur-[130px] pointer-events-none" />
         <div className="absolute bottom-[-10%] left-[-15%] h-[500px] w-[500px] rounded-full bg-indigo-500/10 blur-[130px] pointer-events-none" />
 
         {/* Small Dot Grid Background */}
-        <div 
+        <div
           className="absolute inset-0 opacity-15 pointer-events-none"
           style={{
             backgroundImage: `radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.15) 1px, transparent 0)`,
@@ -112,7 +135,7 @@ export default function SignupPage() {
 
       {/* Right Pane: Auth Forms */}
       <div className="flex flex-1 flex-col items-center justify-center px-6 py-12 md:w-1/2 bg-zinc-50 dark:bg-zinc-950 relative transition-colors duration-200">
-        
+
         {/* Floating Theme Toggle in Right Panel */}
         <div className="absolute top-8 right-8 z-20">
           <ThemeToggle />
@@ -140,29 +163,42 @@ export default function SignupPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              
+
               {/* Form Input fields */}
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit(onSubmit, (errors) => { toast.error("Please fix the errors"); })} className="space-y-4">
                 <div className="space-y-1.5">
-                  <Label htmlFor="name" className="text-xs text-zinc-700 dark:text-zinc-300 font-medium">Full Name</Label>
+                  <Label htmlFor="name" className="text-xs text-zinc-700 dark:text-zinc-300 font-medium">Full Name <span className="text-red-500">*</span></Label>
                   <Input
                     id="name"
                     type="text"
                     placeholder="John Doe"
-                    required
-                    className="bg-white dark:bg-zinc-950/60 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus-visible:border-teal-500/50 focus-visible:ring-teal-500/20 h-9"
-                  />
+                    {...register('name')}
+                    className="bg-white dark:bg-zinc-950/60 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus-visible:border-teal-500/50 focus-visible:ring-teal-500/20 h-9" />
+                  {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>
+                  }
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="email" className="text-xs text-zinc-700 dark:text-zinc-300 font-medium">Email Address</Label>
+                  <Label htmlFor="username" className="text-xs text-zinc-700 dark:text-zinc-300 font-medium">Username <span className="text-red-500">*</span></Label>
+                  <Input
+                    id="username"
+                    type="text"
+                    placeholder="johndoe"
+                    {...register('username')}
+                    className="bg-white dark:bg-zinc-950/60 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus-visible:border-teal-500/50 focus-visible:ring-teal-500/20 h-9" />
+                  {errors.username && <p className="text-red-500 text-xs mt-1">{errors.username.message}</p>
+                  }
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="email" className="text-xs text-zinc-700 dark:text-zinc-300 font-medium">Email Address <span className="text-red-500">*</span></Label>
                   <Input
                     id="email"
                     type="email"
                     placeholder="name@example.com"
-                    required
-                    className="bg-white dark:bg-zinc-950/60 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus-visible:border-teal-500/50 focus-visible:ring-teal-500/20 h-9"
-                  />
+                    {...register('email')}
+                    className="bg-white dark:bg-zinc-950/60 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus-visible:border-teal-500/50 focus-visible:ring-teal-500/20 h-9" />
+                  {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
+                  }
                 </div>
 
                 <div className="space-y-1.5">
@@ -172,9 +208,10 @@ export default function SignupPage() {
                       id="password"
                       type={showPassword ? "text" : "password"}
                       placeholder="••••••••"
-                      required
-                      className="bg-white dark:bg-zinc-950/60 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus-visible:border-teal-500/50 focus-visible:ring-teal-500/20 pr-10 h-9"
-                    />
+                      {...register('password')}
+                      className="bg-white dark:bg-zinc-950/60 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus-visible:border-teal-500/50 focus-visible:ring-teal-500/20 pr-10 h-9" />
+                    {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>
+                    }
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
@@ -191,10 +228,10 @@ export default function SignupPage() {
 
                 <Button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isSubmitting}
                   className="w-full h-9 bg-gradient-to-r from-teal-500 to-emerald-500 text-white hover:from-teal-400 hover:to-emerald-400 transition-all font-semibold shadow-md shadow-teal-500/10 cursor-pointer"
                 >
-                  {isLoading ? "Creating account..." : "Create Account"}
+                  {isSubmitting ? "Creating account..." : "Create Account"}
                 </Button>
               </form>
 
@@ -211,7 +248,7 @@ export default function SignupPage() {
               <div className="grid grid-cols-2 gap-3">
                 <Button
                   variant="outline"
-                  onClick={() => {}}
+                  onClick={() => { }}
                   className="bg-white dark:bg-zinc-950/40 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 h-9 flex gap-2 cursor-pointer"
                 >
                   <FaGoogle className="size-4" />
@@ -219,7 +256,7 @@ export default function SignupPage() {
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => {}}
+                  onClick={() => { }}
                   className="bg-white dark:bg-zinc-950/40 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 h-9 flex gap-2 cursor-pointer"
                 >
                   <FaGithub className="size-4" />
