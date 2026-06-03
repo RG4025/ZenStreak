@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +20,9 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { HiSparkles } from "react-icons/hi";
+import { useMutation } from "@tanstack/react-query";
+import Request from "@/service/request";
+import { USER_ROUTES } from "@/lib/config";
 
 const registerSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -30,25 +34,36 @@ const registerSchema = z.object({
 type RegisterFormData = z.infer<typeof registerSchema>;
 
 export default function SignupPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = React.useState(false);
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
   });
 
-  const onSubmit = async (data: {
-    name: string;
-    username: string;
-    email: string;
-    password: string;
-  }) => {
-    console.log("Form payload:", data);
-    // Simulate API sign up
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    toast.success("Account created successfully!");
+  const mutation = useMutation({
+    mutationFn: async (data: RegisterFormData) => {
+      const { name, ...rest } = data;
+      return Request.post<any>(`${USER_ROUTES}/register`, {
+        fullName: name,
+        ...rest,
+      });
+    },
+    onSuccess: () => {
+      toast.success("Account created successfully!");
+      router.push("/login");
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || error.message || "Failed to create account.";
+      toast.error(message);
+    },
+  });
+
+  const onSubmit = (data: RegisterFormData) => {
+    mutation.mutate(data);
   };
 
   return (
@@ -228,10 +243,10 @@ export default function SignupPage() {
 
                 <Button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={mutation.isPending}
                   className="w-full h-9 bg-gradient-to-r from-teal-500 to-emerald-500 text-white hover:from-teal-400 hover:to-emerald-400 transition-all font-semibold shadow-md shadow-teal-500/10 cursor-pointer"
                 >
-                  {isSubmitting ? "Creating account..." : "Create Account"}
+                  {mutation.isPending ? "Creating account..." : "Create Account"}
                 </Button>
               </form>
 

@@ -16,30 +16,42 @@ import {
 import { ThemeToggle } from "@/components/theme-toggle";
 import { FaEye, FaEyeSlash, FaGoogle, FaGithub, FaBolt } from "react-icons/fa";
 import { HiSparkles } from "react-icons/hi";
+import { useMutation } from "@tanstack/react-query";
+import { useUserStore } from "@/store/useUserStore";
+import Request from "@/service/request";
+import { USER_ROUTES } from "@/lib/config";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const router = useRouter();
+  const login = useUserStore((state) => state.login);
   const [showPassword, setShowPassword] = React.useState(false);
-  const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const loginMutation = useMutation({
+    mutationFn: async (payload: { email: string; password: string }) => {
+      return Request.post<any>(`${USER_ROUTES}/login`, payload);
+    },
+    onSuccess: (response: any) => {
+      const { user, accessToken } = response.data;
+      login(user, accessToken);
+      toast.success("Logged in successfully!");
+      router.push("/dashboard");
+    },
+    onError: (err: any) => {
+      const errMsg = err?.response?.data?.message || err?.message || "Invalid credentials.";
+      setError(errMsg);
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsLoading(true);
     setError(null);
 
     const email = (e.currentTarget.querySelector("#email") as HTMLInputElement).value;
     const password = (e.currentTarget.querySelector("#password") as HTMLInputElement).value;
 
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 800));
-
-    if (email === "user@user.com" && password === "userpass") {
-      router.push("/dashboard");
-    } else {
-      setError("Invalid email address or password.");
-      setIsLoading(false);
-    }
+    loginMutation.mutate({ email, password });
   };
 
   return (
@@ -191,10 +203,10 @@ export default function LoginPage() {
 
                 <Button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={loginMutation.isPending}
                   className="w-full h-9 bg-gradient-to-r from-teal-500 to-emerald-500 text-white hover:from-teal-400 hover:to-emerald-400 transition-all font-semibold shadow-md shadow-teal-500/10 cursor-pointer"
                 >
-                  {isLoading ? "Signing in..." : "Sign In with Email"}
+                  {loginMutation.isPending ? "Signing in..." : "Sign In with Email"}
                 </Button>
               </form>
 

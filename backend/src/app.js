@@ -17,9 +17,13 @@ app.use(cookieParser())
 
 //routes import
 import userRouter from './routes/user.routes.js'
+import habitRouter from './routes/habit.routes.js'
+import habitLogRouter from './routes/habitLog.routes.js'
 
 //routes declaration
 app.use("/api/v1/user", userRouter)
+app.use("/api/v1/habit", habitRouter)
+app.use("/api/v1/habit-log", habitLogRouter)
 
 // http://localhost:8000/api/v1/auth/register
 
