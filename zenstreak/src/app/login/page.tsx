@@ -36,7 +36,9 @@ export default function LoginPage() {
       const { user, accessToken } = response.data;
       login(user, accessToken);
       toast.success("Logged in successfully!");
-      router.push("/dashboard");
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 1000);
     },
     onError: (err: any) => {
       const errMsg = err?.response?.data?.message || err?.message || "Invalid credentials.";

@@ -5,6 +5,11 @@ import { HabitLog } from "../models/habitLog.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import mongoose from "mongoose";
 
+const isValidDateKey = (dateKey) =>
+    typeof dateKey === "string" && /^\d{4}-\d{2}-\d{2}$/.test(dateKey);
+
+const parseBoolean = (value) => value === true || value === "true";
+
 const logHabit = asyncHandler(async (req, res) => {
     const { habitId, dateKey, completed, locked } = req.body;
 
@@ -12,7 +17,7 @@ const logHabit = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid habit ID");
     }
 
-    if (!dateKey || typeof dateKey !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
+    if (!isValidDateKey(dateKey)) {
         throw new ApiError(400, "Invalid dateKey format. Expected format: YYYY-MM-DD");
     }
 
@@ -20,50 +25,64 @@ const logHabit = asyncHandler(async (req, res) => {
         throw new ApiError(400, "completed status is required");
     }
 
-    // Verify habit ownership
-    const habit = await Habit.findOne({
-        _id: habitId,
+    // Verify habit ownership (habit is now embedded inside user's Habit document)
+    const habitDoc = await Habit.findOne({
         userId: req.user._id,
+        "habits._id": habitId,
     });
 
-    if (!habit) {
+    if (!habitDoc) {
         throw new ApiError(404, "Habit not found");
     }
 
-    // Find existing log
-    let log = await HabitLog.findOne({
-        userId: req.user._id,
-        habitId,
-        dateKey,
-    });
+    let userLogDoc = await HabitLog.findOne({ userId: req.user._id });
 
-    if (log) {
-        if (log.locked) {
-            throw new ApiError(400, "Habit log is locked and cannot be modified");
-        }
-
-        log.completed = Boolean(completed);
-        log.completedAt = log.completed ? new Date() : undefined;
-
-        if (locked !== undefined) {
-            log.locked = Boolean(locked);
-        }
-
-        await log.save();
-    } else {
-        log = await HabitLog.create({
+    if (!userLogDoc) {
+        userLogDoc = new HabitLog({
             userId: req.user._id,
-            habitId,
-            dateKey,
-            completed: Boolean(completed),
-            completedAt: Boolean(completed) ? new Date() : undefined,
-            locked: locked !== undefined ? Boolean(locked) : false,
+            logs: [],
         });
     }
 
-    return res.status(200).json(
-        new ApiResponse(200, log, "Habit log updated successfully")
+    const logIndex = userLogDoc.logs.findIndex(
+        (log) =>
+            log.habitId.toString() === habitId.toString() &&
+            log.dateKey === dateKey
     );
+
+    if (logIndex !== -1) {
+        const existingLog = userLogDoc.logs[logIndex];
+
+        if (existingLog.locked) {
+            throw new ApiError(400, "Habit log is locked and cannot be modified");
+        }
+
+        existingLog.completed = parseBoolean(completed);
+        existingLog.completedAt = existingLog.completed ? new Date() : undefined;
+
+        if (locked !== undefined) {
+            existingLog.locked = parseBoolean(locked);
+        }
+    } else {
+        userLogDoc.logs.push({
+            habitId,
+            dateKey,
+            completed: parseBoolean(completed),
+            completedAt: parseBoolean(completed) ? new Date() : undefined,
+            locked: locked !== undefined ? parseBoolean(locked) : false,
+        });
+    }
+
+    await userLogDoc.save();
+
+    const savedLog =
+        logIndex !== -1
+            ? userLogDoc.logs[logIndex]
+            : userLogDoc.logs[userLogDoc.logs.length - 1];
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, savedLog, "Habit log updated successfully"));
 });
 
 const getHabitLogsForHabit = asyncHandler(async (req, res) => {
@@ -75,58 +94,80 @@ const getHabitLogsForHabit = asyncHandler(async (req, res) => {
     }
 
     // Verify habit ownership
-    const habit = await Habit.findOne({
-        _id: habitId,
+    const habitDoc = await Habit.findOne({
         userId: req.user._id,
+        "habits._id": habitId,
     });
 
-    if (!habit) {
+    if (!habitDoc) {
         throw new ApiError(404, "Habit not found");
     }
 
-    const query = {
-        userId: req.user._id,
-        habitId,
-    };
-
-    if (startDateKey || endDateKey) {
-        query.dateKey = {};
-        if (startDateKey) {
-            if (!/^\d{4}-\d{2}-\d{2}$/.test(startDateKey)) {
-                throw new ApiError(400, "Invalid startDateKey format. Expected format: YYYY-MM-DD");
-            }
-            query.dateKey.$gte = startDateKey;
-        }
-        if (endDateKey) {
-            if (!/^\d{4}-\d{2}-\d{2}$/.test(endDateKey)) {
-                throw new ApiError(400, "Invalid endDateKey format. Expected format: YYYY-MM-DD");
-            }
-            query.dateKey.$lte = endDateKey;
-        }
+    if (startDateKey && !isValidDateKey(startDateKey)) {
+        throw new ApiError(
+            400,
+            "Invalid startDateKey format. Expected format: YYYY-MM-DD"
+        );
     }
 
-    const logs = await HabitLog.find(query).sort({ dateKey: 1 });
+    if (endDateKey && !isValidDateKey(endDateKey)) {
+        throw new ApiError(
+            400,
+            "Invalid endDateKey format. Expected format: YYYY-MM-DD"
+        );
+    }
 
-    return res.status(200).json(
-        new ApiResponse(200, logs, "Habit logs fetched successfully")
+    if (startDateKey && endDateKey && startDateKey > endDateKey) {
+        throw new ApiError(400, "startDateKey cannot be greater than endDateKey");
+    }
+
+    const userLogDoc = await HabitLog.findOne({ userId: req.user._id });
+
+    if (!userLogDoc) {
+        return res
+            .status(200)
+            .json(new ApiResponse(200, [], "Habit logs fetched successfully"));
+    }
+
+    let logs = userLogDoc.logs.filter(
+        (log) => log.habitId.toString() === habitId.toString()
     );
+
+    if (startDateKey) {
+        logs = logs.filter((log) => log.dateKey >= startDateKey);
+    }
+
+    if (endDateKey) {
+        logs = logs.filter((log) => log.dateKey <= endDateKey);
+    }
+
+    logs.sort((a, b) => a.dateKey.localeCompare(b.dateKey));
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, logs, "Habit logs fetched successfully"));
 });
 
 const getHabitLogsByDate = asyncHandler(async (req, res) => {
     const { dateKey } = req.params;
 
-    if (!dateKey || !/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
+    if (!isValidDateKey(dateKey)) {
         throw new ApiError(400, "Invalid dateKey format. Expected format: YYYY-MM-DD");
     }
 
-    const logs = await HabitLog.find({
-        userId: req.user._id,
-        dateKey,
-    });
+    const userLogDoc = await HabitLog.findOne({ userId: req.user._id });
 
-    return res.status(200).json(
-        new ApiResponse(200, logs, "Habit logs for date fetched successfully")
-    );
+    if (!userLogDoc) {
+        return res
+            .status(200)
+            .json(new ApiResponse(200, [], "Habit logs for date fetched successfully"));
+    }
+
+    const logs = userLogDoc.logs.filter((log) => log.dateKey === dateKey);
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, logs, "Habit logs for date fetched successfully"));
 });
 
 export {

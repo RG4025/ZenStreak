@@ -169,7 +169,7 @@ export default function SignupPage() {
         {/* Glow behind Form */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[350px] w-[350px] rounded-full bg-teal-500/5 blur-[90px] pointer-events-none" />
 
-        <div className="relative z-10 w-full max-w-sm">
+        <div className="relative z-10 w-full max-w-sm mt-10 sm:mt-0">
           <Card className="border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/20 backdrop-blur-xl shadow-xl shadow-black/5 dark:shadow-black/40">
             <CardHeader className="space-y-1.5 pb-6">
               <CardTitle className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">Create your account</CardTitle>

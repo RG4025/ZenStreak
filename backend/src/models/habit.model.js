@@ -1,13 +1,7 @@
 import mongoose, { Schema } from "mongoose";
 
-const habitSchema = new Schema(
+const habitItemSchema = new Schema(
     {
-        userId: {
-            type: Schema.Types.ObjectId,
-            ref: "User",
-            required: true,
-            index: true,
-        },
         title: {
             type: String,
             required: true,
@@ -19,6 +13,7 @@ const habitSchema = new Schema(
             type: String,
             trim: true,
             maxlength: 300,
+            default: "",
         },
         startDate: {
             type: Date,
@@ -34,9 +29,24 @@ const habitSchema = new Schema(
             default: 0,
         },
     },
+    { timestamps: true } // gives createdAt/updatedAt for each habit item
+);
+
+const userHabitSchema = new Schema(
+    {
+        userId: {
+            type: Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+            unique: true, // only one document per user
+            index: true,
+        },
+        habits: {
+            type: [habitItemSchema],
+            default: [],
+        },
+    },
     { timestamps: true }
 );
 
-habitSchema.index({ userId: 1, title: 1 }, { unique: true });
-
-export const Habit = mongoose.model("Habit", habitSchema);
+export const Habit = mongoose.model("Habit", userHabitSchema);

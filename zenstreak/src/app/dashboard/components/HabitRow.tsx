@@ -4,6 +4,7 @@ import Request from "@/service/request";
 import { toast } from "sonner";
 import { FaFire, FaTrash } from "react-icons/fa";
 import { HiCheckCircle } from "react-icons/hi";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export interface Habit {
   _id: string;
@@ -110,7 +111,12 @@ export function HabitRow({ habit, monthDays }: HabitRowProps) {
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
             <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate leading-tight">
-              {habit.title}
+              <Tooltip>
+                <TooltipTrigger className="w-full text-left truncate">{habit.title}</TooltipTrigger>
+                <TooltipContent>
+                  {habit.title}
+                </TooltipContent>
+              </Tooltip>
             </p>
             {habit.description && (
               <p className="text-[11px] text-zinc-400 dark:text-zinc-500 truncate mt-0.5 leading-tight">

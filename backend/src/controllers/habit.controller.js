@@ -1,9 +1,11 @@
+import mongoose from "mongoose";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 import { Habit } from "../models/habit.model.js";
 import { HabitLog } from "../models/habitLog.model.js";
-import { ApiResponse } from "../utils/ApiResponse.js";
-import mongoose from "mongoose";
+
+const parseBoolean = (value) => value === true || value === "true";
 
 const createHabit = asyncHandler(async (req, res) => {
     const { title, description, startDate, order } = req.body;
@@ -12,7 +14,9 @@ const createHabit = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Title is required");
     }
 
-    if (title.trim().length < 2 || title.trim().length > 100) {
+    const cleanTitle = title.trim();
+
+    if (cleanTitle.length < 2 || cleanTitle.length > 100) {
         throw new ApiError(400, "Title must be between 2 and 100 characters");
     }
 
@@ -20,17 +24,7 @@ const createHabit = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Description cannot exceed 300 characters");
     }
 
-    // Check if habit with same title already exists for this user
-    const existingHabit = await Habit.findOne({
-        userId: req.user._id,
-        title: title.trim(),
-    });
-
-    if (existingHabit) {
-        throw new ApiError(409, "Habit with this title already exists");
-    }
-
-    let parsedStartDate;
+    let parsedStartDate = new Date();
     if (startDate) {
         parsedStartDate = new Date(startDate);
         if (isNaN(parsedStartDate.getTime())) {
@@ -38,33 +32,67 @@ const createHabit = asyncHandler(async (req, res) => {
         }
     }
 
-    const habit = await Habit.create({
-        userId: req.user._id,
-        title: title.trim(),
+    const userId = req.user._id;
+
+    let userHabitDoc = await Habit.findOne({ userId });
+
+    // If no document exists for this user, create one
+    if (!userHabitDoc) {
+        userHabitDoc = new Habit({
+            userId,
+            habits: [],
+        });
+    }
+
+    // Check duplicate title inside the user's habit array
+    const duplicateHabit = userHabitDoc.habits.find(
+        (h) => h.title.toLowerCase() === cleanTitle.toLowerCase()
+    );
+
+    if (duplicateHabit) {
+        throw new ApiError(409, "Habit with this title already exists");
+    }
+
+    userHabitDoc.habits.push({
+        title: cleanTitle,
         description: description?.trim() || "",
-        startDate: parsedStartDate || undefined,
+        startDate: parsedStartDate,
         order: typeof order === "number" ? order : 0,
     });
 
-    return res.status(201).json(
-        new ApiResponse(201, habit, "Habit created successfully")
-    );
+    await userHabitDoc.save();
+
+    const createdHabit = userHabitDoc.habits[userHabitDoc.habits.length - 1];
+
+    return res
+        .status(201)
+        .json(new ApiResponse(201, createdHabit, "Habit created successfully"));
 });
 
 const getHabits = asyncHandler(async (req, res) => {
     const { isArchived } = req.query;
 
-    const query = { userId: req.user._id };
+    const userHabitDoc = await Habit.findOne({ userId: req.user._id });
 
-    if (isArchived !== undefined) {
-        query.isArchived = isArchived === "true";
+    if (!userHabitDoc) {
+        return res.status(200).json(new ApiResponse(200, [], "Habits fetched successfully"));
     }
 
-    const habits = await Habit.find(query).sort({ order: 1, createdAt: -1 });
+    let habits = [...userHabitDoc.habits];
 
-    return res.status(200).json(
-        new ApiResponse(200, habits, "Habits fetched successfully")
-    );
+    if (isArchived !== undefined) {
+        const archivedValue = parseBoolean(isArchived);
+        habits = habits.filter((habit) => habit.isArchived === archivedValue);
+    }
+
+    habits.sort((a, b) => {
+        if (a.order !== b.order) return a.order - b.order;
+        return new Date(b.createdAt) - new Date(a.createdAt);
+    });
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, habits, "Habits fetched successfully"));
 });
 
 const getHabitById = asyncHandler(async (req, res) => {
@@ -74,18 +102,20 @@ const getHabitById = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid habit ID");
     }
 
-    const habit = await Habit.findOne({
-        _id: habitId,
+    const userHabitDoc = await Habit.findOne({
         userId: req.user._id,
+        "habits._id": habitId,
     });
 
-    if (!habit) {
+    if (!userHabitDoc) {
         throw new ApiError(404, "Habit not found");
     }
 
-    return res.status(200).json(
-        new ApiResponse(200, habit, "Habit fetched successfully")
-    );
+    const habit = userHabitDoc.habits.id(habitId);
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, habit, "Habit fetched successfully"));
 });
 
 const updateHabit = asyncHandler(async (req, res) => {
@@ -96,10 +126,16 @@ const updateHabit = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid habit ID");
     }
 
-    const habit = await Habit.findOne({
-        _id: habitId,
+    const userHabitDoc = await Habit.findOne({
         userId: req.user._id,
+        "habits._id": habitId,
     });
+
+    if (!userHabitDoc) {
+        throw new ApiError(404, "Habit not found");
+    }
+
+    const habit = userHabitDoc.habits.id(habitId);
 
     if (!habit) {
         throw new ApiError(404, "Habit not found");
@@ -109,28 +145,31 @@ const updateHabit = asyncHandler(async (req, res) => {
         if (typeof title !== "string" || title.trim() === "") {
             throw new ApiError(400, "Title cannot be empty");
         }
-        if (title.trim().length < 2 || title.trim().length > 100) {
+
+        const cleanTitle = title.trim();
+
+        if (cleanTitle.length < 2 || cleanTitle.length > 100) {
             throw new ApiError(400, "Title must be between 2 and 100 characters");
         }
 
-        // Check unique constraint if title changes
-        if (title.trim() !== habit.title) {
-            const existingHabit = await Habit.findOne({
-                userId: req.user._id,
-                title: title.trim(),
-            });
-            if (existingHabit) {
-                throw new ApiError(409, "Habit with this title already exists");
-            }
-            habit.title = title.trim();
+        const duplicateHabit = userHabitDoc.habits.find(
+            (h) =>
+                h._id.toString() !== habitId &&
+                h.title.toLowerCase() === cleanTitle.toLowerCase()
+        );
+
+        if (duplicateHabit) {
+            throw new ApiError(409, "Habit with this title already exists");
         }
+
+        habit.title = cleanTitle;
     }
 
     if (description !== undefined) {
-        if (description.trim().length > 300) {
+        if (description && description.trim().length > 300) {
             throw new ApiError(400, "Description cannot exceed 300 characters");
         }
-        habit.description = description.trim();
+        habit.description = description?.trim() || "";
     }
 
     if (startDate !== undefined) {
@@ -142,7 +181,7 @@ const updateHabit = asyncHandler(async (req, res) => {
     }
 
     if (isArchived !== undefined) {
-        habit.isArchived = Boolean(isArchived);
+        habit.isArchived = parseBoolean(isArchived);
     }
 
     if (order !== undefined) {
@@ -152,11 +191,11 @@ const updateHabit = asyncHandler(async (req, res) => {
         habit.order = order;
     }
 
-    await habit.save();
+    await userHabitDoc.save();
 
-    return res.status(200).json(
-        new ApiResponse(200, habit, "Habit updated successfully")
-    );
+    return res
+        .status(200)
+        .json(new ApiResponse(200, habit, "Habit updated successfully"));
 });
 
 const deleteHabit = asyncHandler(async (req, res) => {
@@ -166,24 +205,28 @@ const deleteHabit = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid habit ID");
     }
 
-    const habit = await Habit.findOne({
-        _id: habitId,
+    const userHabitDoc = await Habit.findOne({
         userId: req.user._id,
+        "habits._id": habitId,
     });
 
+    if (!userHabitDoc) {
+        throw new ApiError(404, "Habit not found");
+    }
+
+    const habit = userHabitDoc.habits.id(habitId);
     if (!habit) {
         throw new ApiError(404, "Habit not found");
     }
 
-    // Delete the habit itself
-    await habit.deleteOne();
+    userHabitDoc.habits.pull(habitId);
+    await userHabitDoc.save();
 
-    // Cascade delete all associated logs
     await HabitLog.deleteMany({ habitId });
 
-    return res.status(200).json(
-        new ApiResponse(200, {}, "Habit and its logs deleted successfully")
-    );
+    return res
+        .status(200)
+        .json(new ApiResponse(200, {}, "Habit and its logs deleted successfully"));
 });
 
 export {

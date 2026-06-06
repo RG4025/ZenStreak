@@ -157,49 +157,10 @@ export function Dashboard() {
         </div>
 
         {/* Stats Summary cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/20 shadow-sm backdrop-blur-md">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Active Habits</span>
-              <FaBolt className="text-teal-500 size-4" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-zinc-900 dark:text-white">
-                {isLoading ? "..." : totalHabits}
-              </div>
-              <p className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-1">Currently being logged daily</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/20 shadow-sm backdrop-blur-md">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Grid Visualizer</span>
-              <FaChartPie className="text-emerald-500 size-4" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-zinc-900 dark:text-white">Monthly</div>
-              <p className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-1">Interactive month-based day squares</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/20 shadow-sm backdrop-blur-md">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Mental Level</span>
-              <FaHeartbeat className="text-indigo-500 size-4" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-zinc-900 dark:text-white">Zen Master</div>
-              <p className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-1">Focused, consistent, and balanced</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Content Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-          {/* Create Habit card form (better UI) */}
-          <div className="lg:col-span-1">
-            <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/20 shadow-sm sticky top-28 backdrop-blur-md">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+          <div className="">
+            {/* Create Habit card form (better UI) */}
+            <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/20 shadow-sm  backdrop-blur-md">
               <CardHeader className="pb-4">
                 <CardTitle className="text-lg font-bold text-zinc-900 dark:text-white">Create New Habit</CardTitle>
                 <CardDescription className="text-xs text-zinc-500 dark:text-zinc-400">
@@ -255,56 +216,94 @@ export function Dashboard() {
               </CardContent>
             </Card>
           </div>
+          <div className="flex flex-col items-center gap-3 w-full ">
+            <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/20 shadow-sm backdrop-blur-md w-full">
+              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Active Habits</span>
+                <FaBolt className="text-teal-500 size-4" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-zinc-900 dark:text-white">
+                  {isLoading ? "..." : totalHabits}
+                </div>
+                <p className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-1">Currently being logged daily</p>
+              </CardContent>
+            </Card>
 
-          {/* Grid Layout structure for Habits (Monthly display) */}
-          <div className="lg:col-span-2 space-y-4">
-            <h2 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
-              <span>Routines & Calendar Log</span>
-              {isLoading && <span className="text-xs font-normal text-zinc-400 animate-pulse">(Loading habits...)</span>}
-            </h2>
+            <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/20 shadow-sm backdrop-blur-md w-full">
+              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Grid Visualizer</span>
+                <FaChartPie className="text-emerald-500 size-4" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-zinc-900 dark:text-white">Monthly</div>
+                <p className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-1">Interactive month-based day squares</p>
+              </CardContent>
+            </Card>
 
-            {/* Error fallback */}
-            {isError && (
-              <div className="p-4 border border-destructive/20 bg-destructive/10 text-destructive rounded-xl text-sm font-medium">
-                Error loading habits: {error?.message || "Please refresh the page."}
-              </div>
-            )}
+            <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/20 shadow-sm backdrop-blur-md w-full">
+              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Mental Level</span>
+                <FaHeartbeat className="text-indigo-500 size-4" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-zinc-900 dark:text-white">Zen Master</div>
+                <p className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-1">Focused, consistent, and balanced</p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
 
-            {/* Loading skeletons */}
-            {isLoading && (
-              <div className="space-y-4">
-                {[1, 2].map((i) => (
-                  <div key={i} className="h-72 w-full rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/10 animate-pulse p-5 space-y-4">
-                    <div className="h-6 bg-zinc-200 dark:bg-zinc-900 rounded w-1/3" />
-                    <div className="h-4 bg-zinc-100 dark:bg-zinc-900 rounded w-1/2" />
-                    <div className="grid grid-cols-7 gap-2 pt-4">
-                      {Array.from({ length: 28 }).map((_, d) => (
-                        <div key={d} className="aspect-square bg-zinc-100 dark:bg-zinc-900 rounded-lg" />
-                      ))}
-                    </div>
+        {/* Content Layout */}
+
+        {/* Grid Layout structure for Habits (Monthly display) */}
+        <div className="w-full">
+          <h2 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
+            <span>Routines & Calendar Log</span>
+            {isLoading && <span className="text-xs font-normal text-zinc-400 animate-pulse">(Loading habits...)</span>}
+          </h2>
+
+          {/* Error fallback */}
+          {isError && (
+            <div className="p-4 border border-destructive/20 bg-destructive/10 text-destructive rounded-xl text-sm font-medium">
+              Error loading habits: {error?.message || "Please refresh the page."}
+            </div>
+          )}
+
+          {/* Loading skeletons */}
+          {isLoading && (
+            <div className="space-y-4">
+              {[1, 2].map((i) => (
+                <div key={i} className="h-72 w-full rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/10 animate-pulse p-5 space-y-4">
+                  <div className="h-6 bg-zinc-200 dark:bg-zinc-900 rounded w-1/3" />
+                  <div className="h-4 bg-zinc-100 dark:bg-zinc-900 rounded w-1/2" />
+                  <div className="grid grid-cols-7 gap-2 pt-4">
+                    {Array.from({ length: 28 }).map((_, d) => (
+                      <div key={d} className="aspect-square bg-zinc-100 dark:bg-zinc-900 rounded-lg" />
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
+                </div>
+              ))}
+            </div>
+          )}
 
-            {/* Empty state */}
-            {!isLoading && !isError && totalHabits === 0 && (
-              <div className="text-center py-16 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl bg-white/30 dark:bg-zinc-950/10">
-                <p className="text-zinc-500 dark:text-zinc-450 text-sm">No active habits. Create one on the left to start logging!</p>
-              </div>
-            )}
+          {/* Empty state */}
+          {!isLoading && !isError && totalHabits === 0 && (
+            <div className="text-center py-16 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl bg-white/30 dark:bg-zinc-950/10">
+              <p className="text-zinc-500 dark:text-zinc-450 text-sm">No active habits. Create one on the left to start logging!</p>
+            </div>
+          )}
 
-            {/* Habits Grid Display */}
-            <div className="grid grid-cols-1 gap-6">
-              {/* {habitsList.map((habit) => (
+          {/* Habits Grid Display */}
+          <div className="grid grid-cols-1 gap-6">
+            {/* {habitsList.map((habit) => (
                 <HabitCard key={habit._id} habit={habit} />
               ))} */}
-              <HabitGridTable habits={habitsList} />
-            </div>
-
+            <HabitGridTable habits={habitsList} />
           </div>
 
         </div>
+
 
       </main>
     </div>

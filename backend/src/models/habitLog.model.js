@@ -1,16 +1,9 @@
 import mongoose, { Schema } from "mongoose";
 
-const habitLogSchema = new Schema(
+const habitLogItemSchema = new Schema(
     {
-        userId: {
-            type: Schema.Types.ObjectId,
-            ref: "User",
-            required: true,
-            index: true,
-        },
         habitId: {
             type: Schema.Types.ObjectId,
-            ref: "Habit",
             required: true,
             index: true,
         },
@@ -34,9 +27,24 @@ const habitLogSchema = new Schema(
     { timestamps: true }
 );
 
-habitLogSchema.index(
-    { userId: 1, habitId: 1, dateKey: 1 },
-    { unique: true }
+const habitLogSchema = new Schema(
+    {
+        userId: {
+            type: Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+            unique: true,
+            index: true,
+        },
+        logs: {
+            type: [habitLogItemSchema],
+            default: [],
+        },
+    },
+    { timestamps: true }
 );
+
+// Keep one document per user
+habitLogSchema.index({ userId: 1 }, { unique: true });
 
 export const HabitLog = mongoose.model("HabitLog", habitLogSchema);

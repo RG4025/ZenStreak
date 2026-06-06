@@ -3,6 +3,11 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { QueryProvider } from "@/components/query-provider";
 import "./globals.css";
+import { Toaster } from "sonner";
+import { Suspense } from "react";
+import { Loader2 } from "lucide-react";
+import { success } from "zod";
+import { FaCheck } from "react-icons/fa";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,7 +43,10 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            {children}
+            <Suspense fallback={<div><Loader2 className="animate-spin" /></div>}>
+              {children}
+            </Suspense>
+            <Toaster position="top-right" richColors duration={2000} />
           </ThemeProvider>
         </QueryProvider>
       </body>
