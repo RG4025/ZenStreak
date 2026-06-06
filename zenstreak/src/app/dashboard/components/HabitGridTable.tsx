@@ -24,6 +24,7 @@ export function HabitGridTable({ habits }: HabitGridTableProps) {
         dateKey,
         isFuture: dateKey > todayStr,
         isToday: dateKey === todayStr,
+        isOlder: dateKey < todayStr,
       };
     });
   }, [year, month, daysInMonth, todayStr]);

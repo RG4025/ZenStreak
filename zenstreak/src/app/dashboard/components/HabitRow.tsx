@@ -5,6 +5,16 @@ import { toast } from "sonner";
 import { FaFire, FaTrash } from "react-icons/fa";
 import { HiCheckCircle } from "react-icons/hi";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export interface Habit {
   _id: string;
@@ -17,13 +27,15 @@ export interface Habit {
 
 interface HabitRowProps {
   habit: Habit;
-  monthDays: { dayNum: number; dateKey: string; isFuture: boolean; isToday: boolean }[];
+  monthDays: { dayNum: number; dateKey: string; isFuture: boolean; isToday: boolean; isOlder: boolean }[];
 }
 
 export function HabitRow({ habit, monthDays }: HabitRowProps) {
   const queryClient = useQueryClient();
 
-  // Fetch logs for this habit for the current month
+  const [deleteOpen, setDeleteOpen] = React.useState(false);
+  const [confirmText, setConfirmText] = React.useState("");
+
   const firstDay = monthDays[0]?.dateKey;
   const lastDay = monthDays[monthDays.length - 1]?.dateKey;
 
@@ -38,14 +50,12 @@ export function HabitRow({ habit, monthDays }: HabitRowProps) {
 
   const logs = logsResponse?.data || [];
 
-  // Build a map of dateKey -> completed
   const completedMap = React.useMemo(() => {
     const m = new Map<string, boolean>();
     logs.forEach((log: any) => m.set(log.dateKey, Boolean(log.completed)));
     return m;
   }, [logs]);
 
-  // Toggle mutation
   const toggleMutation = useMutation({
     mutationFn: (payload: { dateKey: string; completed: boolean }) =>
       Request.post<any>("/api/v1/habit-log", {
@@ -61,42 +71,44 @@ export function HabitRow({ habit, monthDays }: HabitRowProps) {
     },
   });
 
-  // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: () => Request.delete<any>(`/api/v1/habit/${habit._id}`),
     onSuccess: () => {
       toast.success(`"${habit.title}" deleted.`);
       queryClient.invalidateQueries({ queryKey: ["habits"] });
+      setDeleteOpen(false);
+      setConfirmText("");
     },
     onError: (err: any) => {
       toast.error(err?.response?.data?.message || "Failed to delete habit.");
     },
   });
 
-  const handleDayClick = (dateKey: string, isFuture: boolean) => {
-    if (isFuture) return;
+  const handleDayClick = (dateKey: string, isFuture: boolean, isOlder: boolean) => {
+    if (isFuture || isOlder) return;
     if (toggleMutation.isPending) return;
     const current = completedMap.get(dateKey) ?? false;
     toggleMutation.mutate({ dateKey, completed: !current });
   };
 
-  // Calculate streak
   const streak = React.useMemo(() => {
     let count = 0;
     const today = new Date();
+
     for (let i = 0; i < 365; i++) {
       const d = new Date(today);
       d.setDate(d.getDate() - i);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
       if (completedMap.get(key)) {
         count++;
       } else if (i === 0) {
-        // today might not be logged yet — skip and check yesterday
         continue;
       } else {
         break;
       }
     }
+
     return count;
   }, [completedMap]);
 
@@ -104,84 +116,136 @@ export function HabitRow({ habit, monthDays }: HabitRowProps) {
     ? (toggleMutation.variables as any)?.dateKey
     : null;
 
+  const canDelete = confirmText.trim() === "DELETE";
+
+  const handleDelete = () => {
+    if (!canDelete || deleteMutation.isPending) return;
+    deleteMutation.mutate();
+  };
+
   return (
-    <tr className="group border-b border-zinc-100 dark:border-zinc-800/60 hover:bg-zinc-50/60 dark:hover:bg-zinc-900/20 transition-colors">
-      {/* Sticky habit info cell */}
-      <td className="sticky left-0 z-10 bg-white dark:bg-zinc-950 group-hover:bg-zinc-50 dark:group-hover:bg-zinc-900/90 transition-colors border-r border-zinc-200 dark:border-zinc-800 px-4 py-3 min-w-[220px] max-w-[220px] backdrop-blur-3xl">
-        <div className="flex items-center justify-between gap-2">
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate leading-tight">
-              <Tooltip>
-                <TooltipTrigger className="w-full text-left truncate">{habit.title}</TooltipTrigger>
-                <TooltipContent>
-                  {habit.title}
-                </TooltipContent>
-              </Tooltip>
-            </p>
-            {habit.description && (
-              <p className="text-[11px] text-zinc-400 dark:text-zinc-500 truncate mt-0.5 leading-tight">
-                {habit.description}
+    <>
+      <tr className="group border-b border-zinc-100 dark:border-zinc-800/60 hover:bg-zinc-50/60 dark:hover:bg-zinc-900/20 transition-colors">
+        <td className="sticky left-0 z-10 bg-white dark:bg-zinc-950 group-hover:bg-zinc-50 dark:group-hover:bg-zinc-900/90 transition-colors border-r border-zinc-200 dark:border-zinc-800 px-4 py-3 min-w-[220px] max-w-[220px] backdrop-blur-3xl">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate leading-tight">
+                <Tooltip>
+                  <TooltipTrigger className="w-full text-left truncate">
+                    {habit.title}
+                  </TooltipTrigger>
+                  <TooltipContent>{habit.title}</TooltipContent>
+                </Tooltip>
               </p>
-            )}
-            {/* Streak badge */}
-            <div className="flex items-center gap-1 mt-1.5">
-              <FaFire className="size-2.5 text-orange-400 shrink-0" />
-              <span className="text-[10px] font-bold text-orange-500 dark:text-orange-400">
-                {streak}d streak
-              </span>
+
+              {habit.description && (
+                <p className="text-[11px] text-zinc-400 dark:text-zinc-500 truncate mt-0.5 leading-tight">
+                  {habit.description}
+                </p>
+              )}
+
+              <div className="flex items-center gap-1 mt-1.5">
+                <FaFire className="size-2.5 text-orange-400 shrink-0" />
+                <span className="text-[10px] font-bold text-orange-500 dark:text-orange-400">
+                  {streak}d streak
+                </span>
+              </div>
             </div>
+
+            <button
+              onClick={() => setDeleteOpen(true)}
+              disabled={deleteMutation.isPending}
+              className="shrink-0 p-1.5 rounded-lg text-zinc-300 dark:text-zinc-600 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100 cursor-pointer disabled:opacity-40"
+              title="Delete habit"
+            >
+              <FaTrash className="size-3" />
+            </button>
           </div>
-          {/* Delete button */}
-          <button
-            onClick={() => {
-              if (confirm(`Delete "${habit.title}" and all its logs?`)) {
-                deleteMutation.mutate();
-              }
-            }}
-            disabled={deleteMutation.isPending}
-            className="shrink-0 p-1.5 rounded-lg text-zinc-300 dark:text-zinc-600 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100 cursor-pointer disabled:opacity-40"
-            title="Delete habit"
-          >
-            <FaTrash className="size-3" />
-          </button>
-        </div>
-      </td>
+        </td>
 
-      {/* Per-day toggle cells */}
-      {monthDays.map((day) => {
-        const isCompleted = completedMap.get(day.dateKey) ?? false;
-        const isPending = pendingKey === day.dateKey;
+        {monthDays.map((day) => {
+          const isCompleted = completedMap.get(day.dateKey) ?? false;
+          const isPending = pendingKey === day.dateKey;
 
-        return (
-          <td
-            key={day.dateKey}
-            className={`p-0.5 text-center align-middle ${day.isFuture ? "cursor-not-allowed" : "cursor-pointer"}`}
-            title={`${day.dateKey}${isCompleted ? " ✔ Completed" : ""}`}
-            onClick={() => handleDayClick(day.dateKey, day.isFuture)}
-          >
-            {isLoading ? (
-              <div className="mx-auto h-7 w-7 rounded-lg bg-zinc-100 dark:bg-zinc-900 animate-pulse" />
-            ) : (
-              <div
-                className={`mx-auto h-7 w-7 rounded-lg flex items-center justify-center transition-all duration-150 border ${day.isFuture
-                  ? "bg-transparent border-zinc-100 dark:border-zinc-900"
-                  : isPending
+          return (
+            <td
+              key={day.dateKey}
+              className={`p-0.5 text-center align-middle ${day.isFuture || day.isOlder
+                ? "cursor-not-allowed"
+                : "cursor-pointer"
+                }`}
+              title={`${day.dateKey}${isCompleted ? " ✔ Completed" : ""}`}
+              onClick={() => handleDayClick(day.dateKey, day.isFuture, day.isOlder)}
+            >
+              {isLoading ? (
+                <div className="mx-auto h-7 w-7 rounded-lg bg-zinc-100 dark:bg-zinc-900 animate-pulse" />
+              ) : (
+                <div
+                  className={`mx-auto h-7 w-7 rounded-lg flex items-center justify-center transition-all duration-150 border ${isPending
                     ? "bg-teal-200 dark:bg-teal-900/50 border-teal-300 dark:border-teal-700 animate-pulse"
                     : isCompleted
                       ? "bg-gradient-to-br from-teal-400 to-emerald-500 border-transparent shadow-sm shadow-teal-500/20"
-                      : day.isToday
-                        ? "border-teal-400 dark:border-teal-600 bg-teal-50/50 dark:bg-teal-950/20 hover:bg-teal-100 dark:hover:bg-teal-900/30"
-                        : "border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50 hover:border-teal-300 dark:hover:border-teal-700 hover:bg-teal-50 dark:hover:bg-teal-950/30"
-                  }`}
-              >
-                {isCompleted && !isPending && (
-                  <HiCheckCircle className="size-4 text-white" />
-                )}
-              </div>
-            )}
-          </td>
-        );
-      })}
-    </tr>
+                      : day.isFuture || day.isOlder
+                        ? "bg-transparent border-zinc-100 dark:border-zinc-900"
+                        : day.isToday
+                          ? "border-teal-400 dark:border-teal-600 bg-teal-50/50 dark:bg-teal-950/20 hover:bg-teal-100 dark:hover:bg-teal-900/30"
+                          : "border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50 hover:border-teal-300 dark:hover:border-teal-700 hover:bg-teal-50 dark:hover:bg-teal-950/30"
+                    }`}
+                >
+                  {isCompleted && !isPending && (
+                    <HiCheckCircle className="size-4 text-white" />
+                  )}
+                </div>
+              )}
+            </td>
+          );
+        })}
+      </tr>
+
+      <Dialog
+        open={deleteOpen}
+        onOpenChange={(open) => {
+          setDeleteOpen(open);
+          if (!open) setConfirmText("");
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete habit?</DialogTitle>
+            <DialogDescription>
+              This will delete <span className="font-medium">"{habit.title}"</span> and all its logs.
+              Type <span className="font-semibold">DELETE</span> to confirm.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2">
+            <Input
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder="Type DELETE"
+              autoComplete="off"
+            />
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteOpen(false)}
+              disabled={deleteMutation.isPending}
+            >
+              Cancel
+            </Button>
+
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={!canDelete || deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

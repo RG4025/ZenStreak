@@ -213,16 +213,16 @@ export default function LoginPage() {
               </form>
 
               {/* Divider */}
-              <div className="relative flex items-center py-2">
+              {/* <div className="relative flex items-center py-2">
                 <div className="flex-grow border-t border-zinc-200 dark:border-zinc-800"></div>
                 <span className="flex-shrink mx-4 text-[10px] text-zinc-400 dark:text-zinc-500 font-semibold uppercase tracking-wider">
                   Or continue with
                 </span>
                 <div className="flex-grow border-t border-zinc-200 dark:border-zinc-800"></div>
-              </div>
+              </div> */}
 
               {/* Social Login buttons */}
-              <div className="grid grid-cols-2 gap-3">
+              {/* <div className="grid grid-cols-2 gap-3">
                 <Button
                   variant="outline"
                   onClick={() => { }}
@@ -239,7 +239,7 @@ export default function LoginPage() {
                   <FaGithub className="size-4" />
                   <span>GitHub</span>
                 </Button>
-              </div>
+              </div> */}
 
               {/* Sign up toggle footer */}
               <p className="text-center text-xs text-zinc-500 pt-4">

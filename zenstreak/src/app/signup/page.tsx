@@ -169,7 +169,7 @@ export default function SignupPage() {
         {/* Glow behind Form */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[350px] w-[350px] rounded-full bg-teal-500/5 blur-[90px] pointer-events-none" />
 
-        <div className="relative z-10 w-full max-w-sm mt-10 sm:mt-0">
+        <div className="relative z-10 w-full max-w-sm 0 sm:mt-0">
           <Card className="border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/20 backdrop-blur-xl shadow-xl shadow-black/5 dark:shadow-black/40">
             <CardHeader className="space-y-1.5 pb-6">
               <CardTitle className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">Create your account</CardTitle>
@@ -180,7 +180,7 @@ export default function SignupPage() {
             <CardContent className="space-y-4">
 
               {/* Form Input fields */}
-              <form onSubmit={handleSubmit(onSubmit, (errors) => { toast.error("Please fix the errors"); })} className="space-y-4">
+              <form onSubmit={handleSubmit(onSubmit, (errors) => { toast.error("Please fill the required fields"); })} className="space-y-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="name" className="text-xs text-zinc-700 dark:text-zinc-300 font-medium">Full Name <span className="text-red-500">*</span></Label>
                   <Input
@@ -189,7 +189,7 @@ export default function SignupPage() {
                     placeholder="John Doe"
                     {...register('name')}
                     className="bg-white dark:bg-zinc-950/60 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus-visible:border-teal-500/50 focus-visible:ring-teal-500/20 h-9" />
-                  {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>
+                  {errors.name && <p className="text-red-500 text-xs ">{errors.name.message}</p>
                   }
                 </div>
 
@@ -201,7 +201,7 @@ export default function SignupPage() {
                     placeholder="johndoe"
                     {...register('username')}
                     className="bg-white dark:bg-zinc-950/60 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus-visible:border-teal-500/50 focus-visible:ring-teal-500/20 h-9" />
-                  {errors.username && <p className="text-red-500 text-xs mt-1">{errors.username.message}</p>
+                  {errors.username && <p className="text-red-500 text-xs ">{errors.username.message}</p>
                   }
                 </div>
                 <div className="space-y-1.5">
@@ -212,7 +212,7 @@ export default function SignupPage() {
                     placeholder="name@example.com"
                     {...register('email')}
                     className="bg-white dark:bg-zinc-950/60 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus-visible:border-teal-500/50 focus-visible:ring-teal-500/20 h-9" />
-                  {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
+                  {errors.email && <p className="text-red-500 text-xs ">{errors.email.message}</p>
                   }
                 </div>
 
@@ -225,7 +225,7 @@ export default function SignupPage() {
                       placeholder="••••••••"
                       {...register('password')}
                       className="bg-white dark:bg-zinc-950/60 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus-visible:border-teal-500/50 focus-visible:ring-teal-500/20 pr-10 h-9" />
-                    {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>
+                    {errors.password && <p className="text-red-500 text-xs ">{errors.password.message}</p>
                     }
                     <button
                       type="button"
@@ -251,16 +251,16 @@ export default function SignupPage() {
               </form>
 
               {/* Divider */}
-              <div className="relative flex items-center py-1.5">
+              {/* <div className="relative flex items-center py-1.5">
                 <div className="flex-grow border-t border-zinc-200 dark:border-zinc-800"></div>
                 <span className="flex-shrink mx-4 text-[10px] text-zinc-400 dark:text-zinc-500 font-semibold uppercase tracking-wider">
                   Or register with
                 </span>
                 <div className="flex-grow border-t border-zinc-200 dark:border-zinc-800"></div>
-              </div>
+              </div> */}
 
               {/* Social Login buttons */}
-              <div className="grid grid-cols-2 gap-3">
+              {/* <div className="grid grid-cols-2 gap-3">
                 <Button
                   variant="outline"
                   onClick={() => { }}
@@ -277,7 +277,7 @@ export default function SignupPage() {
                   <FaGithub className="size-4" />
                   <span>GitHub</span>
                 </Button>
-              </div>
+              </div> */}
 
               {/* Sign in toggle footer */}
               <p className="text-center text-xs text-zinc-500 pt-4">

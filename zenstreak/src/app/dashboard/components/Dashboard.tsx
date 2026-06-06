@@ -135,33 +135,49 @@ export function Dashboard() {
       {/* Main Container */}
       <main className="mx-auto max-w-7xl px-6 py-10 space-y-8">
 
-        {/* Welcome Banner */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-zinc-900/20 border border-zinc-200 dark:border-zinc-850 p-6 rounded-2xl relative overflow-hidden backdrop-blur-md shadow-sm">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/5 rounded-full blur-2xl pointer-events-none" />
-          <div className="space-y-1.5 relative z-10">
-            <div className="inline-flex items-center gap-1 text-xs font-semibold text-teal-600 dark:text-teal-400">
-              <HiSparkles />
-              <span>Mindful Flow Active</span>
-            </div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-white">
-              Welcome back, {user.fullName}!
-            </h1>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              Build tiny habits. Protect your mental peace. Track your monthly grids below.
-            </p>
-          </div>
-          <div className="bg-zinc-100 dark:bg-zinc-850 px-4 py-2 rounded-xl text-xs font-semibold text-zinc-650 dark:text-zinc-300 shrink-0 flex items-center gap-2 border border-zinc-200/50 dark:border-zinc-800">
-            <FaCalendarAlt className="text-indigo-500" />
-            <span>Today: {new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}</span>
-          </div>
-        </div>
+
 
         {/* Stats Summary cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+          {/* Welcome Banner */}
+
+          <div className="flex flex-col items-start gap-4 w-full ">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-zinc-900/20 border border-zinc-200 dark:border-zinc-800 p-6 rounded-2xl relative overflow-hidden backdrop-blur-md shadow-sm">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/5 rounded-full blur-2xl pointer-events-none" />
+              <div className="space-y-1.5 relative z-10">
+                <div className="inline-flex items-center gap-1 text-xs font-semibold text-teal-600 dark:text-teal-400">
+                  <HiSparkles />
+                  <span>Mindful Flow Active</span>
+                </div>
+                <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-white">
+                  Welcome back, {user?.username}!
+                </h1>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                  Build tiny habits. Protect your mental peace. Track your monthly grids below.
+                </p>
+              </div>
+              <div className="bg-zinc-100 dark:bg-zinc-700 px-4 py-2 rounded-xl text-xs font-semibold text-zinc-650 dark:text-zinc-300 shrink-0 flex items-center gap-2 border border-zinc-200/50 dark:border-zinc-800">
+                <FaCalendarAlt className="text-indigo-500" />
+                <span>Today: {new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}</span>
+              </div>
+            </div>
+            <Card className="w-full border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/20 shadow-sm backdrop-blur-md">
+              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Active Habits</span>
+                <FaBolt className="text-teal-500 size-4" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-zinc-900 dark:text-white">
+                  {isLoading ? "..." : totalHabits}
+                </div>
+                <p className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-1">Currently being logged daily</p>
+              </CardContent>
+            </Card>
+          </div>
           <div className="">
             {/* Create Habit card form (better UI) */}
             <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/20 shadow-sm  backdrop-blur-md">
-              <CardHeader className="pb-4">
+              <CardHeader className="pb-0 gap-0">
                 <CardTitle className="text-lg font-bold text-zinc-900 dark:text-white">Create New Habit</CardTitle>
                 <CardDescription className="text-xs text-zinc-500 dark:text-zinc-400">
                   Build habits that fit into your daily mindfulness routing.
@@ -213,42 +229,6 @@ export function Dashboard() {
                     )}
                   </Button>
                 </form>
-              </CardContent>
-            </Card>
-          </div>
-          <div className="flex flex-col items-center gap-3 w-full ">
-            <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/20 shadow-sm backdrop-blur-md w-full">
-              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Active Habits</span>
-                <FaBolt className="text-teal-500 size-4" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-zinc-900 dark:text-white">
-                  {isLoading ? "..." : totalHabits}
-                </div>
-                <p className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-1">Currently being logged daily</p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/20 shadow-sm backdrop-blur-md w-full">
-              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Grid Visualizer</span>
-                <FaChartPie className="text-emerald-500 size-4" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-zinc-900 dark:text-white">Monthly</div>
-                <p className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-1">Interactive month-based day squares</p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/20 shadow-sm backdrop-blur-md w-full">
-              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Mental Level</span>
-                <FaHeartbeat className="text-indigo-500 size-4" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-zinc-900 dark:text-white">Zen Master</div>
-                <p className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-1">Focused, consistent, and balanced</p>
               </CardContent>
             </Card>
           </div>
