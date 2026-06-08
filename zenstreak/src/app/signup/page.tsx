@@ -73,8 +73,8 @@ export default function SignupPage() {
       <div className="relative hidden md:flex md:w-1/2 flex-col justify-between p-12 overflow-hidden border-r border-zinc-200/50 dark:border-zinc-800/40 bg-zinc-900 dark:bg-zinc-950">
 
         {/* Glows */}
-        <div className="absolute top-[-10%] right-[-10%] h-[500px] w-[500px] rounded-full bg-teal-500/10 blur-[130px] pointer-events-none" />
-        <div className="absolute bottom-[-10%] left-[-15%] h-[500px] w-[500px] rounded-full bg-indigo-500/10 blur-[130px] pointer-events-none" />
+        <div className="absolute top-[-10%] right-[-10%] h-125 w-125 rounded-full bg-teal-500/10 blur-[130px] pointer-events-none" />
+        <div className="absolute bottom-[-10%] left-[-15%] h-125 w-125 rounded-full bg-indigo-500/10 blur-[130px] pointer-events-none" />
 
         {/* Small Dot Grid Background */}
         <div
@@ -87,7 +87,7 @@ export default function SignupPage() {
 
         {/* Header Branding */}
         <Link href="/" className="relative z-10 flex items-center gap-2 group cursor-pointer w-fit">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-tr from-teal-500 to-indigo-600 shadow-md shadow-teal-500/10 transition-transform group-hover:scale-105">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-linear-to-tr from-teal-500 to-indigo-600 shadow-md shadow-teal-500/10 transition-transform group-hover:scale-105">
             <FaBolt className="h-4.5 w-4.5 text-white" />
           </div>
           <span className="text-lg font-bold tracking-tight text-white group-hover:text-zinc-200 transition-colors">
@@ -159,7 +159,7 @@ export default function SignupPage() {
         {/* Responsive top bar logo for mobile */}
         <div className="md:hidden absolute top-8 left-6">
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr from-teal-500 to-indigo-600">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-tr from-teal-500 to-indigo-600">
               <FaBolt className="h-4 w-4 text-white" />
             </div>
             <span className="text-base font-bold tracking-tight text-zinc-900 dark:text-white">ZenStreak</span>
@@ -167,7 +167,7 @@ export default function SignupPage() {
         </div>
 
         {/* Glow behind Form */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[350px] w-[350px] rounded-full bg-teal-500/5 blur-[90px] pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-37.5 w-37.5 rounded-full bg-teal-500/5 blur-[90px] pointer-events-none" />
 
         <div className="relative z-10 w-full max-w-sm 0 sm:mt-0">
           <Card className="border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/20 backdrop-blur-xl shadow-xl shadow-black/5 dark:shadow-black/40">
