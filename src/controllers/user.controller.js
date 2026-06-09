@@ -279,6 +279,8 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, user, "Account details updated successfully"))
 });
 
+
+
 export {
     registerUser,
     loginUser,
